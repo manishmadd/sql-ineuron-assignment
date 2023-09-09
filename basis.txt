@@ -1,0 +1,265 @@
+-- Q1. Query all columns for all American cities in the CITY table with populations larger than 100000.
+SELECT *
+FROM CITY
+WHERE CountryCode = 'USA' AND Population > 100000;
+
+-- Q2. Query the NAME field for all American cities in the CITY table with populations larger than 120000.
+SELECT NAME
+FROM CITY
+WHERE CountryCode = 'USA' AND Population > 120000;
+
+-- Q3. Query all columns (attributes) for every row in the CITY table.
+SELECT *
+FROM CITY;
+
+-- Q4. Query all columns for a city in CITY with the ID 1661.
+SELECT *
+FROM CITY
+WHERE ID = 1661;
+
+-- Q5. Query all attributes of every Japanese city in the CITY table. The COUNTRYCODE for Japan is JPN.
+SELECT *
+FROM CITY
+WHERE CountryCode = 'JPN';
+
+-- Q6. Query the names of all the Japanese cities in the CITY table. The COUNTRYCODE for Japan is JPN.
+SELECT NAME
+FROM CITY
+WHERE CountryCode = 'JPN';
+
+
+##############################################################
+
+-- Q7. Query a list of CITY and STATE from the STATION table.
+SELECT CITY, STATE
+FROM STATION;
+
+-- Q8. Query a list of CITY names from STATION for cities that have an even ID number. Print the results in any order, but exclude duplicates from the answer.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE MOD(ID, 2) = 0;
+
+-- Q9. Find the difference between the total number of CITY entries in the table and the number of distinct CITY entries in the table.
+SELECT COUNT(CITY) - COUNT(DISTINCT CITY) AS CityCountDifference
+FROM STATION;
+
+-- Q10. Query the two cities in STATION with the shortest and longest CITY names, as well as their respective lengths.
+SELECT CITY, LENGTH(CITY) AS CityLength
+FROM STATION
+ORDER BY CityLength ASC, CITY ASC
+LIMIT 1;
+
+
+-- Q12. Query the list of CITY names ending with vowels (a, e, i, o, u) from STATION. Your result cannot contain duplicates.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE RIGHT(CITY, 1) IN ('a', 'e', 'i', 'o', 'u');
+
+-- Q13. Query the list of CITY names from STATION that do not start with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE LEFT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u');
+
+-- Q14. Query the list of CITY names from STATION that do not end with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE RIGHT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u');
+
+-- Q15. Query the list of CITY names from STATION that either do not start with vowels or do not end with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE LEFT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u') OR RIGHT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u');
+
+-- Q16. Query the list of CITY names from STATION that do not start with vowels and do not end with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT CITY
+FROM STATION
+WHERE LEFT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u') AND RIGHT(CITY, 1) NOT IN ('a', 'e', 'i', 'o', 'u');
+
+################################################################
+
+-- Q17. Query for products sold only in the first quarter of 2019
+SELECT p.product_id, p.product_name
+FROM Product p
+LEFT JOIN Sales s
+ON p.product_id = s.product_id
+WHERE YEAR(s.sale_date) = 2019 AND (MONTH(s.sale_date) >= 1 AND MONTH(s.sale_date) <= 3);
+
+-- Q18. Query for authors who viewed at least one of their own articles
+SELECT DISTINCT author_id AS id
+FROM Views
+WHERE author_id = viewer_id
+ORDER BY id;
+
+-- Q19. Query to find the percentage of immediate orders in the Delivery table
+SELECT ROUND((SUM(CASE WHEN order_date = customer_pref_delivery_date THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS immediate_percentage
+FROM Delivery;
+
+-- Q20. Query to calculate the Click-Through Rate (CTR) of each Ad
+SELECT ad_id, 
+       CASE WHEN action = 'Clicked' THEN ROUND(SUM(action = 'Clicked') / COUNT(*) * 100, 2)
+            ELSE 0.00
+       END AS ctr
+FROM Ads
+GROUP BY ad_id
+ORDER BY ctr DESC, ad_id ASC;
+
+-- Q21. Query to find the team size of each employee
+SELECT e.employee_id, COUNT(*) AS team_size
+FROM Employee e
+GROUP BY e.employee_id
+ORDER BY e.employee_id;
+
+-- Q22. Query to find the weather type in each country for November 2019
+SELECT c.country_name,
+       CASE WHEN AVG(w.weather_state) < 15 THEN 'Cold'
+            WHEN AVG(w.weather_state) >= 25 THEN 'Hot'
+            ELSE 'Warm'
+       END AS weather_type
+FROM Countries c
+JOIN Weather w
+ON c.country_id = w.country_id
+WHERE w.day >= '2019-11-01' AND w.day <= '2019-11-30'
+GROUP BY c.country_name;
+
+-- Q23. Query to calculate the average selling price for each product
+SELECT us.product_id, 
+       ROUND(SUM(p.price * us.units) / SUM(us.units), 2) AS average_price
+FROM UnitsSold us
+JOIN Prices p
+ON us.product_id = p.product_id
+GROUP BY us.product_id;
+
+-- Q24. Query to find the first login date for each player
+SELECT player_id, MIN(event_date) AS first_login
+FROM Activity
+GROUP BY player_id;
+
+-- Q25. Query to find the device that is first logged in for each player
+SELECT player_id, device_id AS first_login_device
+FROM (SELECT player_id, device_id, 
+             ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY event_date) AS rn
+      FROM Activity) AS subquery
+WHERE rn = 1;
+
+-- Q26. Query to find products with at least 100 units ordered in February 2020
+SELECT p.product_name, SUM(o.quantity) AS unit
+FROM Products p
+LEFT JOIN Orders o
+ON p.product_id = o.product_id
+WHERE o.order_date >= '2020-02-01' AND o.order_date <= '2020-02-29'
+GROUP BY p.product_name
+HAVING SUM(o.quantity) >= 100;
+
+-- Q27. Query to find users with valid emails
+SELECT user_id, name, mail
+FROM Users
+WHERE mail REGEXP '^[A-Za-z][A-Za-z0-9_.-]*@leetcode\.com$';
+
+-- Q28. Query to find customers who spent at least $100 in each month of June and July 2020
+SELECT c.customer_id, c.name
+FROM Customers c
+LEFT JOIN Orders o
+ON c.customer_id = o.customer_id AND o.order_date BETWEEN '2020-06-01' AND '2020-06-30'
+LEFT JOIN Orders o2
+ON c.customer_id = o2.customer_id AND o2.order_date BETWEEN '2020-07-01' AND '2020-07-31'
+GROUP BY c.customer_id, c.name
+HAVING SUM(o.quantity * p.price) >= 100 AND SUM(o2.quantity * p2.price) >= 100;
+
+-- Q29. Query to find content for kids that was streamed in June 2020
+SELECT DISTINCT c.title
+FROM Content c
+JOIN TVProgram t
+ON c.content_id = t.content_id
+WHERE c.Kids_content = 'Y' AND t.program_date >= '2020-06-01' AND t.program_date <= '2020-06-30';
+##############################################
+
+
+-- Q32
+SELECT Q.id, Q.year, IFNULL(N.npv, 0) AS npv
+FROM Queries Q
+LEFT JOIN NPV N
+ON Q.id = N.id AND Q.year = N.year;
+
+-- Q33
+SELECT U.name, SUM(R.distance) AS travelled_distance
+FROM Users U
+LEFT JOIN Rides R
+ON U.id = R.user_id
+GROUP BY U.id, U.name
+ORDER BY travelled_distance DESC, U.name;
+
+-- Q34
+SELECT P.product_name, ROUND(AVG(O.unit_price), 2) AS average_price
+FROM Products P
+JOIN Orders O
+ON P.product_id = O.product_id
+WHERE O.order_date BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY P.product_name;
+
+-- Q35
+SELECT U.name AS results
+FROM Users U
+JOIN MovieRating MR
+ON U.user_id = MR.user_id
+WHERE MR.created_at BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY U.name
+HAVING AVG(MR.rating) = (
+  SELECT AVG(MR2.rating)
+  FROM MovieRating MR2
+  WHERE MR2.created_at BETWEEN '2020-02-01' AND '2020-02-29'
+  LIMIT 1
+);
+
+-- Q36
+SELECT U.name, SUM(R.distance) AS travelled_distance
+FROM Users U
+LEFT JOIN Rides R
+ON U.id = R.user_id
+GROUP BY U.id, U.name
+ORDER BY travelled_distance DESC, U.name;
+
+-- Q37
+SELECT U.id, U.name, E.unique_id
+FROM Employees U
+LEFT JOIN EmployeeUNI E
+ON U.id = E.id;
+
+-- Q38
+SELECT S.id, S.name
+FROM Students S
+LEFT JOIN Departments D
+ON S.department_id = D.id
+WHERE D.id IS NULL;
+
+-- Q39
+SELECT C1.from_id AS person1, C1.to_id AS person2, COUNT(C1.from_id) AS call_count, SUM(C1.duration) AS total_duration
+FROM Calls C1
+JOIN Calls C2
+ON C1.from_id = C2.to_id AND C1.to_id = C2.from_id
+GROUP BY C1.from_id, C1.to_id
+HAVING person1 < person2
+ORDER BY person1, person2;
+
+-- Q40
+SELECT P.product_id, ROUND(AVG(P.price * U.units), 2) AS average_price
+FROM Prices P
+JOIN UnitsSold U
+ON P.product_id = U.product_id
+GROUP BY P.product_id;
+
+-- Q41
+SELECT W.name AS warehouse_name, SUM(P.Width * P.Length * P.Height * W.units) AS volume
+FROM Warehouse W
+JOIN Products P
+ON W.product_id = P.product_id
+GROUP BY W.name;
+
+-- Q42
+SELECT S1.sale_date, S1.sold_num - S2.sold_num AS diff
+FROM Sales S1
+JOIN Sales S2
+ON S1.sale_date = S2.sale_date
+WHERE S1.fruit = 'apples' AND S2.fruit = 'oranges'
+ORDER BY S1.sale_date;
+
+
